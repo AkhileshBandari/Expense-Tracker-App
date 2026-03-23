@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker Pro</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ 
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="stylesheet" href="./style.css">
+
+
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>💎 Expense Dashboard</h1>
+            <button class="logout" onclick="logout()">Logout</button>
+        </div>
+        <div class="glass form">
+            <input id="incomeAmount" type="number" placeholder="Monthly Income">
+            <button onclick="addIncome()">Set Income</button>
+        </div>
+
+        <!-- CARDS -->
+
+        <div class="cards">
+            <div class="card glass">
+                <h3>Income</h3>
+                <p id="income">₹0</p>
+            </div>
+
+            <div class="card glass">
+                <h3>Expense</h3>
+                <p id="expense">₹0</p>
+            </div>
+
+            <div class="card glass">
+                <h3>Savings</h3>
+                <p id="savings">₹0</p>
+            </div>
+
+        </div>
+
+        <!-- FORM -->
+
+        <div class="glass form">
+            <input id="title" placeholder="Expense Title">
+            <input id="amount" type="number" placeholder="Amount">
+
+
+            <select id="category">
+                <option value="food">Food</option>
+                <option value="travel">Travel</option>
+                <option value="shopping">Shopping</option>
+                <option value="bills">Bills</option>
+                <option value="bills">Other</option>
+            </select>
+
+            <button onclick="addExpense(event)">Add</button>
+            <p id="successMsg" style="color:#22c55e; display:none;">
+    ✔ Expense added successfully
+</p>
+
+
+        </div>
+
+        <!-- TRANSACTIONS -->
+
+        <div id="transactions"></div>
+
+        <!-- CHARTS -->
+
+        <div class="charts">
+            <canvas id="barChart"></canvas>
+            <canvas id="pieChart"></canvas>
+        </div>
+
+    </div>
+    <script src="index.js"></script>
+</body>
+
+</html>
