@@ -117,5 +117,100 @@ canvas {
     from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
 }
+/* MEDIA QURIES */
+/* ===== RESPONSIVE DESIGN ===== */
 
+/* Tablets (≤1024px) */
+@media (max-width: 1024px) {
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
+    .charts {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        width: 92%;
+    }
+}
+
+/* Mobile Large (≤768px) */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .form {
+        flex-direction: column;
+    }
+
+    .form input,
+    .form select,
+    .form button {
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+
+/* Small Mobile (≤480px) */
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+    }
+
+    .glass {
+        padding: 15px;
+        border-radius: 14px;
+    }
+
+    .container {
+        margin-top: 15px;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    #transactions div {
+        font-size: 13px;
+        padding: 8px;
+    }
+
+    canvas {
+        width: 100% !important;
+        height: auto !important;
+    }
+}
+
+/* Ultra Small Devices (≤360px) */
+@media (max-width: 360px) {
+    body {
+        font-size: 13px;
+    }
+
+    h1, h2 {
+        font-size: 18px;
+    }
+
+    button {
+        padding: 10px;
+    }
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+* {
+    box-sizing: border-box;
+}
