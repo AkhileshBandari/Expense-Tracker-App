@@ -1,5 +1,30 @@
 const API = "https://expense-tracker-app1.onrender.com";
 
+/* ================= SAFE FETCH ================= */
+async function safeFetch(url, options = {}) {
+    try {
+        const res = await fetch(url, options);
+
+        if (!res.ok) {
+            throw new Error("Server error");
+        }
+
+        const text = await res.text();
+
+        try {
+            return JSON.parse(text);
+        } catch {
+            throw new Error("Invalid JSON response");
+        }
+
+    } catch (err) {
+        console.error("Fetch Error:", err);
+        alert("Server is waking up or network issue. Try again in 10 seconds.");
+        throw err;
+    }
+}
+
+/* ================= AUTH CHECK ================= */
 if (window.location.pathname.includes("dashboard.html")) {
     const token = localStorage.getItem("token");
 
@@ -11,6 +36,11 @@ if (window.location.pathname.includes("dashboard.html")) {
 /* ================= HEADERS ================= */
 function headers() {
     const token = localStorage.getItem("token");
+
+    if (!token) {
+        return { "Content-Type": "application/json" };
+    }
+
     return {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
@@ -28,13 +58,11 @@ async function login() {
     }
 
     try {
-        const res = await fetch(API + "/login/", {
+        const data = await safeFetch(API + "/login/", {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password })
         });
-
-        const data = await res.json();
 
         if (!data.access) {
             alert("Invalid login");
@@ -45,78 +73,59 @@ async function login() {
         window.location.href = "dashboard.html";
 
     } catch (err) {
-        alert("Server is waking up... try again in 10 seconds");
-        console.error(err);
+        // handled already
     }
 }
 
 /* ================= CATEGORY DATA ================= */
 async function loadCategoryData(month, year) {
-    const token = localStorage.getItem("token");
+    try {
+        const data = await safeFetch(
+            `${API}/category-analysis/?month=${month}&year=${year}`,
+            { headers: headers() }
+        );
 
-    const res = await fetch(
-        `${API}/category-analysis/?month=${month}&year=${year}`,
-        {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        }
-    );
+        return Object.keys(data).length === 0 ? { "No Data": 1 } : data;
 
-    const data = await res.json();
-
-    return Object.keys(data).length === 0 ? { "No Data": 1 } : data;
+    } catch {
+        return { "No Data": 1 };
+    }
 }
 
 /* ================= LOAD DASHBOARD ================= */
 async function loadDashboard() {
-
     const token = localStorage.getItem("token");
 
-    // 🔒 Protect route
     if (!token) {
         window.location.href = "index.html";
         return;
     }
 
-    let res;
+    let data;
 
     try {
-        res = await fetch(API + "/dashboard/", {
+        data = await safeFetch(API + "/dashboard/", {
             headers: headers()
         });
-    } catch (err) {
-        console.error("Network error");
+    } catch {
         return;
     }
-
-    if (res.status === 401) {
-        localStorage.removeItem("token");
-        window.location.href = "index.html";
-        return;
-    }
-
-    const data = await res.json();
 
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
-    const currentYear = today.getFullYear();
 
     let income = 0;
     let expense = 0;
 
-    // ✅ ONLY CURRENT MONTH DATA
     if (data[currentMonth]) {
         income = data[currentMonth].income;
         expense = data[currentMonth].expense;
     }
 
-    // UI update
     document.getElementById("income").innerText = "₹" + income;
     document.getElementById("expense").innerText = "₹" + expense;
     document.getElementById("savings").innerText = "₹" + (income - expense);
 
-    // TRANSACTION DISPLAY
     const container = document.getElementById("transactions");
     if (container) {
         container.innerHTML = "";
@@ -128,15 +137,13 @@ async function loadDashboard() {
         }
     }
 
-    // CATEGORY ANALYTICS
-    const categories = await loadCategoryData(currentMonth, currentYear);
+    const categories = await loadCategoryData(currentMonth, today.getFullYear());
 
     renderCharts(data, categories, currentMonth);
 }
 
 /* ================= ADD EXPENSE ================= */
 async function addExpense(event) {
-
     const titleInput = document.getElementById("title");
     const amountInput = document.getElementById("amount");
     const categoryInput = document.getElementById("category");
@@ -150,20 +157,25 @@ async function addExpense(event) {
     btn.innerText = "Adding...";
     btn.disabled = true;
 
-    await fetch(API + "/add-expense/", {
-        method: "POST",
-        headers: headers(),
-        body: JSON.stringify({
-            month: today.getMonth() + 1,
-            year: today.getFullYear(),
-            text: titleInput.value,
-            amount: amountInput.value,
-            category: categoryInput.value,
-            date: today.toISOString().split("T")[0]
-        })
-    });
+    try {
+        await safeFetch(API + "/add-expense/", {
+            method: "POST",
+            headers: headers(),
+            body: JSON.stringify({
+                month: today.getMonth() + 1,
+                year: today.getFullYear(),
+                text: titleInput.value,
+                amount: amountInput.value,
+                category: categoryInput.value,
+                date: today.toISOString().split("T")[0]
+            })
+        });
+    } catch {
+        btn.innerText = "Add";
+        btn.disabled = false;
+        return;
+    }
 
-    // reset
     titleInput.value = "";
     amountInput.value = "";
 
@@ -176,16 +188,10 @@ async function addExpense(event) {
     btn.disabled = false;
 
     loadDashboard();
-    try {
-       await fetch(...)
-        } catch(err) {
-   alert("Network issue. Try again.");
 }
-}
-btn.innerText = "Please wait...";
+
 /* ================= ADD INCOME ================= */
 async function addIncome() {
-
     const incomeInput = document.getElementById("incomeAmount");
     const income = incomeInput.value;
 
@@ -196,18 +202,21 @@ async function addIncome() {
 
     const today = new Date();
 
-    await fetch(API + "/add-budget/", {
-        method: "POST",
-        headers: headers(),
-        body: JSON.stringify({
-            month: today.getMonth() + 1,
-            year: today.getFullYear(),
-            income: income
-        })
-    });
+    try {
+        await safeFetch(API + "/add-budget/", {
+            method: "POST",
+            headers: headers(),
+            body: JSON.stringify({
+                month: today.getMonth() + 1,
+                year: today.getFullYear(),
+                income: income
+            })
+        });
+    } catch {
+        return;
+    }
 
     incomeInput.value = "";
-
     alert("Income updated");
 
     loadDashboard();
@@ -215,13 +224,11 @@ async function addIncome() {
 
 /* ================= CHARTS ================= */
 function renderCharts(data, categories, currentMonth) {
-
     const barCanvas = document.getElementById("barChart");
     const pieCanvas = document.getElementById("pieChart");
 
     if (!barCanvas || !pieCanvas) return;
 
-    // ONLY CURRENT MONTH BAR
     const income = data[currentMonth]?.income || 0;
     const expense = data[currentMonth]?.expense || 0;
 
@@ -259,6 +266,6 @@ function logout() {
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", () => {
     if (window.location.pathname.includes("dashboard")) {
-        loadDashboard();
+        setTimeout(loadDashboard, 2000); // handles Render cold start
     }
 });
