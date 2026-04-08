@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = "https://expense-tracker-app1.onrender.com";
 
 if (window.location.pathname.includes("dashboard.html")) {
     const token = localStorage.getItem("token");
