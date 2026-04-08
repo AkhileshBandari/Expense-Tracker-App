@@ -27,21 +27,27 @@ async function login() {
         return;
     }
 
-    const res = await fetch(API + "/login/", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ username, password })
-    });
+    try {
+        const res = await fetch(API + "/login/", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ username, password })
+        });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    if (!data.access) {
-        alert("Invalid login");
-        return;
+        if (!data.access) {
+            alert("Invalid login");
+            return;
+        }
+
+        localStorage.setItem("token", data.access);
+        window.location.href = "dashboard.html";
+
+    } catch (err) {
+        alert("Server is waking up... try again in 10 seconds");
+        console.error(err);
     }
-
-    localStorage.setItem("token", data.access);
-    window.location.href = "dashboard.html";
 }
 
 /* ================= CATEGORY DATA ================= */
@@ -170,8 +176,13 @@ async function addExpense(event) {
     btn.disabled = false;
 
     loadDashboard();
+    try {
+       await fetch(...)
+        } catch(err) {
+   alert("Network issue. Try again.");
 }
-
+}
+btn.innerText = "Please wait...";
 /* ================= ADD INCOME ================= */
 async function addIncome() {
 
